@@ -1,0 +1,30 @@
+
+WIDTH=8;
+DEPTH=256;
+
+ADDRESS_RADIX=UNS;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+	0    :   69;
+	1    :   59;
+	2    :   AD;
+	3    :   FA;
+	4    :   2B;
+	5    :   5C;
+	6    :   F5;
+	7    :   68;
+	8    :   40;
+	9    :   33;
+	10    :   E0;
+	11    :   BC;
+	12    :   58;
+	13    :   E3;
+	14    :   5C;
+	15    :   AB;
+	16    :   FE;
+	17    :   AD;
+	18    :   2E;
+	19    :   8F;
+	[20..255]  :   00;
+END;
