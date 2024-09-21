@@ -1,0 +1,205 @@
+module top_masked_2D_filter (
+    input clk,
+    input rst,
+    input rx_serial,
+    output out
+);
+
+  assign out = output_out;
+
+  parameter BYTE = 8;
+  parameter INPUT_SIZE = 8;
+  parameter MAX_N = 9;
+
+  //----------KERNEL PARAMETERS-------------------
+  wire [INPUT_SIZE-1:0] n;
+  wire [INPUT_SIZE-1:0] h;
+  wire [INPUT_SIZE-1:0] w;
+  wire [INPUT_SIZE-1:0] r;
+
+  wire [INPUT_SIZE-1:0] parameter_in = rx_byte;
+  wire [1:0] parameter_sel;
+  wire parameter_w_en = w_en_array[2];
+
+  parameters #(
+      .INPUT_SIZE(INPUT_SIZE)
+  ) parameters (
+      .clk(clk),
+      .sel(parameter_sel),
+      .w_en(parameter_w_en),
+      .in(parameter_in),
+      .n(n),
+      .h(h),
+      .w(w),
+      .r(r)
+  );
+
+  //----------- MASK-------------------
+  parameter MASK_BITS = MAX_N * MAX_N;
+  parameter MASK_SIZE = (MASK_BITS + INPUT_SIZE - 1) / 8;
+  parameter MASK_ADDR_BITS = $clog2(MASK_SIZE);
+
+  wire [MASK_ADDR_BITS-1:0] mask_addr;
+  wire mask_w_en = w_en_array[3];
+  wire [INPUT_SIZE-1:0] mask_in = rx_byte;
+  wire [MASK_BITS-1:0] mask;
+
+  assign mask_addr = uart_count[MASK_ADDR_BITS : 0];
+  mask_reg #(
+      .MAX_N(MAX_N),
+      .INPUT_SIZE(INPUT_SIZE)
+  ) mask_reg (
+      .clk (clk),
+      .addr(mask_addr),
+      .w_en(mask_w_en),
+      .in  (mask_in),
+      .mask(mask)
+  );
+
+  //-----------INPUT MEMORY-------------------
+  wire [2*BYTE-1:0] input_addr;
+  wire [INPUT_SIZE-1:0] input_in = rx_byte;
+  wire [INPUT_SIZE-1:0] input_out;
+  wire input_w_en = w_en_array[1];
+
+  assign input_addr = run_kernel ? kernel_r_addr : uart_count;
+
+  single_port_ram #(
+      .SIZE(2 ** (2 * BYTE)),
+      .INPUT_SIZE(INPUT_SIZE)
+  ) input_mem (
+      .clk (clk),
+      .addr(input_addr),
+      .w_en(input_w_en),
+      .in  (input_in),
+      .out (input_out)
+  );
+
+  //-----------OUTPUT MEMORY-------------------
+  wire [2*BYTE-1:0] output_addr = kernel_w_addr;
+  wire [INPUT_SIZE-1:0] output_in = kernel_out;
+  wire [INPUT_SIZE-1:0] output_out;
+  wire output_w_en = kernel_w_en;
+
+  single_port_ram #(
+      .SIZE(2 ** (2 * BYTE)),
+      .INPUT_SIZE(INPUT_SIZE)
+  ) output_mem (
+      .clk (clk),
+      .addr(output_addr),
+      .w_en(output_w_en),
+      .in  (output_in),
+      .out (output_out)
+  );
+
+
+  //---------FSM--------------------------
+  wire [7:0] fsm_uart;
+  wire fsm_counter_rst;
+  wire in_addr_sel;
+  wire [1:0] uart_sel;
+  wire start_run;
+  wire start_send;
+  assign kernel_done = input_len == kernel_w_addr;
+  //DELETE
+  fsm #(
+      .MASK_BYTES(MASK_SIZE)
+  ) fsm (
+      .clk(clk),
+      .rst(rst),
+      .uart_in(rx_byte),
+      .counter(uart_count),
+      .kernel_done(kernel_done),
+      .input_len(input_len),
+      .counter_rst(fsm_counter_rst),
+      .in_addr_sel(in_addr_sel),
+      .para_sel(parameter_sel),
+      .uart_sel(uart_sel),
+      .rx_dv(w_en_array[0]),
+      .run_kernel(run_kernel),
+      .start_send(start_send)
+  );
+
+  //----------COUNTER--------
+  assign count_rst = rst & ~fsm_counter_rst;
+
+  wire [2*BYTE-1 : 0] uart_count;
+
+  counter #(
+      .COUNT_BITS(2 * BYTE)
+  ) uart_counter (
+      .clk(clk),
+      .rst(count_rst),
+      .do_count(rx_dv),
+      .count(uart_count)
+  );
+
+  //------------UART-RX-------------
+  //50000000 / 115200 = 434
+  wire [7:0] rx_byte;
+  uart_rx #(
+      .CLKS_PER_BIT(434)
+  ) uart_rx (
+      .i_Clock(clk),
+      .i_Rx_Serial(rx_serial),
+      .o_Rx_DV(rx_dv),
+      .o_Rx_Byte(rx_byte)
+  );
+
+  //-------------WIRES--------
+  wire [15:0] input_len;
+  assign input_len = w * h;
+
+  //--------MUX---------------
+  reg [3:0] w_en_array;
+  always @(*) begin
+    w_en_array = 4'b0000;
+    case (uart_sel)
+      2'b01:   w_en_array[1] = rx_dv;
+      2'b10:   w_en_array[2] = rx_dv;
+      2'b11:   w_en_array[3] = rx_dv;
+      default: w_en_array[0] = rx_dv;
+    endcase
+  end
+
+  //--------ADDRESS HANDLER___________________________________
+  wire [2*BYTE-1:0] kernel_r_addr;
+  wire [2*BYTE-1:0] kernel_w_addr;
+  assign address_handler_rst = rst & run_kernel;
+  assign kernel_clk = clk;  // & run_kernel;
+  address_handler #(
+      .WORD (2 * BYTE),
+      .MAX_N(MAX_N)
+  ) address_handler (
+      .clk(kernel_clk),
+      .rst(address_handler_rst),
+      .h({8'd0, h}),
+      .w({8'd0, w}),
+      .n({8'd0, n}),
+      .r_addr(kernel_r_addr),
+      .w_addr(kernel_w_addr),
+      .w_en(kernel_w_en),
+      .r_en(kernel_r_en),
+      .kernel_newline(newline)
+  );
+
+  //----------KERNEL---------------------------------------
+  parameter RANK_BITS = $clog2(MAX_N * MAX_N + 1);
+  wire [BYTE-1:0] kernel_out;
+  wire [BYTE-1:0] kernel_in;
+  wire [RANK_BITS-1:0] rank_select = r[RANK_BITS-1:0];
+  assign kernel_rst = address_handler_rst & ~newline;
+  assign kernel_in  = kernel_r_en ? input_out : 8'd0;
+  masked_rank_order #(
+      .N(MAX_N * MAX_N),
+      .DATA_BITS(INPUT_SIZE)
+  ) kernel (
+      .clk(clk),
+      .rst(kernel_rst),
+      .i_new(kernel_in),
+      .mask(mask),
+      .rank_sel(rank_select),
+      .out(kernel_out)
+  );
+
+endmodule
