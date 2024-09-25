@@ -101,7 +101,8 @@ module address_handler2 #(
         yc <= neg_k;
         yw <= yw;
         xr <= xr + 1;
-        kernel_newline <= 1'd0;
+        if (xw == w-1) kernel_newline <= 1'd1;
+        else kernel_newline <= 1'd0;
         start_address <= start_address;
         write <= ~xw[7];
       end
@@ -112,7 +113,7 @@ module address_handler2 #(
         yc <= neg_k;
         yw <= yw+1;
         xr <= 8'd0;
-        kernel_newline <= 1'd1;
+        kernel_newline <= 1'd0;
         if (yr[7]) start_address <= 0;
         else start_address <= start_address + w;
         write <= 1'd0;

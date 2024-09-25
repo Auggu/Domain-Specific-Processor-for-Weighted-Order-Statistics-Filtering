@@ -5,32 +5,37 @@ import cv2
 
 
 def main():
-    n = 3
-    r = 5 
+    n = 5
+    r = 13
     
-    mask5 = [[1,1,1,0,0],
-            [1,1,1,0,0],
-            [1,1,1,0,0],
-            [0,0,0,0,0],
-            [0,0,0,0,0]]
-    
+    mask5_3 = [[1,1,1,0,0],
+               [1,1,1,0,0],
+               [1,1,1,0,0],
+               [0,0,0,0,0],
+               [0,0,0,0,0]]
+
+    mask5_5 = [[1,1,1,1,1],
+               [1,1,1,1,1],
+               [1,1,1,1,1],
+               [1,1,1,1,1],
+               [1,1,1,1,1]]
+       
     mask3 = [[1,1,1],
             [1,1,1],
             [1,1,1]]
     
     
    
-    img_noisy = cv2.imread("duckSmall.png") #create_noisy_image("duckSmall.png")
-    img_noisy = cv2.cvtColor(img_noisy, cv2.COLOR_BGR2GRAY)
+    img_noisy = create_noisy_image("duckSmall.png")
     print("original")
     print(img_noisy)
     ser = serial.Serial("/dev/ttyUSB0", 115200)
-    filtered = run_filter(img_noisy, n, r, mask3 ,ser)
+    filtered = run_filter(img_noisy, n, r, mask5_5 ,ser)
     filtUint8 = filtered.astype(np.uint8)  
     print("filterd")
     print(filtered) 
     
-    true_filtered = sc.medfilt(img_noisy,3)
+    true_filtered = sc.medfilt(img_noisy,5)
 
     print("truenormal")
     print(true_filtered) 
@@ -41,27 +46,9 @@ def main():
     cv2.imshow("img_filtered", true_filtered)
     cv2.waitKey(0)
 
-    #res = ser.read(6) 
-    #print(res)
-
     ser.close()
 
-    #res = ser.read(100) 
-    #print(res)
      
-
-
-    """
-    img_filtered = sc.medfilt(img_noisy,5)
-    cv2.imshow("noisy", img_noisy)
-    cv2.waitKey(0)
-    cv2.imshow("img_filtered", img_filtered)
-    cv2.waitKey(0)
-    cv2.imshow("img_filtered", img_grey)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """
-
 
 def run_filter(pic, n, r, mask, ser):
     shape = pic.shape
@@ -129,7 +116,7 @@ def send_m(mask, n, serial):
 
     for _ in range(4 - len(byte_list)):
         byte_list.append(0)
-
+    
     ba = bytearray(byte_list)
     serial.write(bytes(b'm'))
     print(ba)

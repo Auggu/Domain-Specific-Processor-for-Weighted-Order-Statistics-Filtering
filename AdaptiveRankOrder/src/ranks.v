@@ -21,7 +21,7 @@ endmodule
 
 module rank_reg #(
     parameter RESET_VAL = 0,
-    parameter rank_bits = 2
+    parameter rank_bits = 4
 ) (
     input clk,
     input rst,
@@ -64,22 +64,7 @@ module ranks #(
     reg [N-1:0] clrs;
 
     adder_ladder #(N, rank_bits) al (i_is_ge[N-2 : 0], k,rank_next[0]);
-    /*
-    integer j;
-    always @ (*) begin
-        r_oldest[N-2] = rank_curr[N-1];
-        r_oldest[N-3] = rank_curr[N-1];
-        for (j = 0; j < N-3; j = j+2) begin
-            if(k[j/2]) begin
-                r_oldest[j] = r_oldest[j+2];
-                r_oldest[j+1] = r_oldest[j+2];
-            end else begin
-                r_oldest[j] = rank_curr [j+2]; 
-                r_oldest[j+1] = rank_curr [j+2]; 
-            end         
-        end
-    end
-    */
+ 
     integer j;
     always @ (*) begin
         r_oldest[N-2] = rank_curr[N-1];

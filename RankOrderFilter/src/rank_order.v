@@ -12,7 +12,7 @@ module rank_order #(
     wire [data_bits*N-1:0] s;
     wire [rank_bits*N-1:0] r;
 
-    shift_reg #(data_bits, N) data_regs(clk, rst, i_new, s);
+    shift_reg #(data_bits, N) sample_regs(clk, rst, i_new, s);
 
     ranks #(data_bits, rank_bits, N) 
         rank_logic (clk, 

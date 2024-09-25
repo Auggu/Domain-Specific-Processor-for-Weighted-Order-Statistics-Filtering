@@ -1,5 +1,5 @@
-adder_ladder.v
-ranks.v 
-shift_reg.v
-rank_selector.v 
-rank_order.v
+src/adder_ladder.v
+src/ranks.v 
+src/shift_reg.v
+src/rank_selector.v 
+src/rank_order.v

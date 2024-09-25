@@ -32,7 +32,7 @@ module rank_reg #(
 
   parameter RESET_VAL = 2 ** REG_NUMBER - 1;
 
-  always @(posedge clk or negedge rst) begin
+  always @(posedge clk) begin
     if (!rst) out <= RESET_VAL;
     else out <= in;
   end

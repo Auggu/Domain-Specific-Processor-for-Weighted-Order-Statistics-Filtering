@@ -11,7 +11,7 @@ module top_adaptive_rank_order(
 	output [6:0] sev_seg3
 );
 
-    parameter N = 9;
+    parameter N = 201;
     parameter data_bits = 8;
     parameter rank_bits = $clog2(N+1);
 	 parameter RANK_SEL = N/2 +1; 
@@ -54,8 +54,7 @@ module top_adaptive_rank_order(
 		end
 	end
 	
-    //rank_order #(N, data_bits, rank_bits, RANK_SEL) rof (run_clk, rst, rom_buffer, out);
-	  adaptive_rank_order #(N, data_bits, rank_bits) rof (run_clk, rst, i_new, k, rank_sel, out);
+	adaptive_rank_order #(N, data_bits, rank_bits) rof (run_clk, rst, i_new, k, rank_sel, out);
 	 
     seven_seg ss0(ram_o[3:0], sev_seg0);
 	seven_seg ss1(ram_o[7:4], sev_seg1);

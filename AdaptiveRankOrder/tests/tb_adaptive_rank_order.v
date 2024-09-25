@@ -13,7 +13,7 @@ module tb_adaptive_rank_order ();
     reg [rank_bits - 1 : 0] rank_sel;
     wire [data_bits-1 : 0] out;
 
-    adaptive_rank_order #(N, 8, $clog2(N+1))  
+    adaptive_rank_order #(N, 8, $clog2(N+1))
     uut(
         clk,
         rst,
@@ -51,7 +51,7 @@ module tb_adaptive_rank_order ();
             $display("%d",out);
             #20;
         end
-        $finish; 
+        $finish;
     end
 
 

@@ -13,10 +13,10 @@ module top_masked_2D_filter (
     output [6:0] seven_seg3
 );
 
-  parameter SYNTHESIS = 0;
+  parameter SYNTHESIS = 1;
   parameter BYTE = 8;
   parameter INPUT_SIZE = 8;
-  parameter MAX_N = 3;
+  parameter MAX_N = 5;
 
 
   assign leds = state;
@@ -82,7 +82,7 @@ module top_masked_2D_filter (
           .SIZE(2 ** (1+BYTE)),
           .INPUT_SIZE(INPUT_SIZE)
       ) input_mem (
-          .clk (clk),
+          .clk (~clk),
           .addr(input_addr[8:0]),
           .w_en(input_w_en),
           .in  (input_in),
@@ -91,7 +91,7 @@ module top_masked_2D_filter (
 
     end else begin : gen_synth_input
       ram_1_port input_mem (
-          .clock(clk),
+          .clock(~clk),
           .address(input_addr[8:0]),
           .wren(input_w_en),
           .data(input_in),

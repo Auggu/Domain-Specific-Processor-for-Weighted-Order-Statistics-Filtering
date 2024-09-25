@@ -5,7 +5,7 @@ module tb_rank_order ();
     parameter data_bits = 8;
     parameter RANK_SEL = N/2;
 
-    parameter no_in = 21;
+    parameter no_in = 18;
     parameter run_time = (no_in+1) *20;
 
     reg clk = 0;
@@ -26,13 +26,25 @@ module tb_rank_order ();
     initial begin
         $dumpfile("rank_order.vcd");
         $dumpvars(0,tb_rank_order);
-        $readmemh("tests/input.hex", data, 0, no_in-1);
-        $display("%d", RANK_SEL);
-        $monitor("%d", out);
+        $readmemh("tests/duplicates.hex", data, 0, no_in-1);
         rst = 0;
-        #100;
+        #1
         rst = 1;
-        #run_time;
+        $display("in s4 s3 s2 s1 s0 r4 r3 r2 r1 r0 out");
+        for(integer i=0; i< no_in; i = i+1 ) begin
+            $write("%0d ", in);
+            for(integer j=0; j<N; j = j+1) begin
+                $write("%0d ", uut.s[j*8 +: 8]);
+            end
+             for(integer j=0; j<N; j = j+1) begin
+                $write("%0d ", uut.r[j*rank_bits +: rank_bits]);
+            end
+            $write("%0d", out);
+            $display();
+            #20;
+        end
+        $display("");
+        
         $finish;
     end
 endmodule  
