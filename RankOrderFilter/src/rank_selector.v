@@ -19,13 +19,13 @@ module rank_selector #(
         end
     end
     */
-	 
+	 parameter [rank_bits-1 : 0] RS = RANK_SEL;
     wire equal[N-1:0];    
     wire [data_bits-1:0] and_gates [N-1:0];    
     genvar i;
     generate
         for (i = 0; i < N; i = i + 1) begin : and_gen
-            assign equal[i] = r[rank_bits * i +: rank_bits] == RANK_SEL;
+            assign equal[i] = r[rank_bits * i +: rank_bits] == RS;
             assign and_gates[i] = s[data_bits * i +: data_bits] & {data_bits{equal[i]}};
         end
     endgenerate

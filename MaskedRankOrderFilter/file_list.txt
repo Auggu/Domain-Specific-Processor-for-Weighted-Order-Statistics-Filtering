@@ -1,0 +1,6 @@
+src/counter.v
+src/new_s_is_gt.v
+src/masked_ranks.v 
+src/shift_reg.v
+src/rank_selector.v 
+src/masked_rank_order.v
