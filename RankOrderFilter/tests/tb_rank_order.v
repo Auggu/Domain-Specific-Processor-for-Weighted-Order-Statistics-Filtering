@@ -1,5 +1,5 @@
 module tb_rank_order ();
-    
+
     parameter N = 5;
     parameter rank_bits = $clog2(N);
     parameter data_bits = 8;
@@ -44,7 +44,8 @@ module tb_rank_order ();
             #20;
         end
         $display("");
-        
+
         $finish;
     end
-endmodule  
+endmodule
+

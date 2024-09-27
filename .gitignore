@@ -12,7 +12,7 @@ waves/
 .nvim
 .rules.verible_lint
 Masked2DFilterOld/
-
+latex/
 #*
 ##!/riscV/src/*.v
 #!.gitignore
