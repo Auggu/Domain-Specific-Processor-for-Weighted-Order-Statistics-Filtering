@@ -9,7 +9,7 @@ module top_rank_order_filter (
 	output [6:0] sev_seg3
 );
 
-    parameter N = 101;
+    parameter N = 9;
     parameter data_bits = 8;
     parameter rank_bits = $clog2(N);
 	 parameter RANK_SEL = N/2;

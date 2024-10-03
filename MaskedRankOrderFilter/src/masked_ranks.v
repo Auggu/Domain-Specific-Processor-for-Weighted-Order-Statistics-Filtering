@@ -9,7 +9,7 @@ module calculate_rank #(
 
   wire [N-1:0] masked = in & mask;
   wire [$clog2(N+1)-1 : 0] sum;
-  counter #(N) adder (
+  bitsum_tree #(N) adder (
       masked,
       sum
   );

@@ -110,6 +110,7 @@ set_location_assignment PIN_AC25 -to mask[1]
 set_location_assignment PIN_AB26 -to mask[0]
 
 
+set_global_assignment -name VERILOG_FILE src/bitsum_tree.v
 set_global_assignment -name SDC_FILE constrains.sdc
 set_global_assignment -name VERILOG_FILE src/new_s_is_gt.v
 set_global_assignment -name VERILOG_FILE src/debounce.v

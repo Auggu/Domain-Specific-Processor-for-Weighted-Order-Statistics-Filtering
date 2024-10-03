@@ -13,6 +13,7 @@ waves/
 .rules.verible_lint
 Masked2DFilterOld/
 latex/
+*.mw
 #*
 ##!/riscV/src/*.v
 #!.gitignore
