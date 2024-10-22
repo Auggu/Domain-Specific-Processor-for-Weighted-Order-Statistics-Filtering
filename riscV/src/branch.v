@@ -3,7 +3,8 @@ module branch (
     input [31:0] r2,
     input [ 1:0] branch_op,
     input [ 2:0] func3,
-    output do_branch
+    input instr30,
+    output reg do_branch
 );
 
 parameter [2:0] BEQ = 3'b000;

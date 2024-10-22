@@ -32,7 +32,14 @@ module decode (
     //WB
     output reg [4:0] o_w_idx,
     output reg [1:0] o_wb_sel,
-    output reg o_wb_en
+    output reg o_wb_en,
+
+    //Forwarding Unit
+    output reg [4:0] o_rs1,
+    output reg [4:0] o_rs2,
+    //Harzard detection
+    output [4:0] o_wire_rs1,
+    output [4:0] o_wire_rs2
 );
 
   wire [6:0] opcode = i_instr[6:0];
@@ -41,6 +48,7 @@ module decode (
   wire [4:0] rs1 = i_instr[19:15];
   wire [4:0] rs2 = i_instr[24:20];
   wire instr30 = i_instr[30];
+
 
   wire [31:0] reg1_wire;
   wire [31:0] reg2_wire;
@@ -78,6 +86,9 @@ module decode (
     .wb_en(wb_en)
   );
 
+  assign o_wire_rs1 = rs1;
+  assign o_wire_rs2 = rs2;
+
   always @(posedge clk or negedge rst) begin
     if (!rst) begin
       o_pc <= 0;
@@ -95,6 +106,8 @@ module decode (
       o_w_idx <= 0;
       o_wb_sel <= 0;
       o_wb_en <= 0;
+      o_rs1 <= 0;
+      o_rs2 <= 0;
     end else if (!stall) begin
       if (flush) begin
         o_pc <= 0;
@@ -112,6 +125,8 @@ module decode (
         o_w_idx <= 0;
         o_wb_sel <= 0;
         o_wb_en <= 0;
+        o_rs1 <= 0;
+        o_rs2 <= 0;
       end else begin
         o_pc <= i_pc;
         o_pc4 <= i_pc4;
@@ -128,6 +143,8 @@ module decode (
         o_w_idx <= rd;
         o_wb_sel <= wb_sel;
         o_wb_en <= wb_en;
+        o_rs1 <= rs1;
+        o_rs2 <= rs2;
       end
     end
   end
