@@ -1,8 +1,6 @@
 module top_riscv (
     input clk,
-    input rst,
-    input stall,
-    input flush
+    input rst
 );
 
   parameter ROMSIZE = 512;
@@ -41,7 +39,7 @@ module top_riscv (
       .clk(clk),
       .rst(rst),
 
-      .stall(),
+      .stall(1'b0),
       .flush(do_branch|ld_hazard),
 
       .i_instr(instr_f),
@@ -129,7 +127,7 @@ module top_riscv (
   );
 
   wire ld_hazard;
-  harzard_detection hd (
+  hazard_detection hd (
   .i_rs1_d(rs1_wire_d),
   .i_rs2_d(rs2_wire_d),
   .i_wb_idx_e(w_idx_d),

@@ -15,8 +15,8 @@ module forwarding_unit (
   assign o_rs1_fw_sel[0] = (i_rs1_e == i_wb_idx_m) & i_w_en_m;
   assign o_rs2_fw_sel[0] = (i_rs2_e == i_wb_idx_m) & i_w_en_m;
 
-  assign o_rs1_fw_sel[1] = ((i_rs1_e == i_wb_idx_w) & i_w_en_m) & !o_rs1_fw_sel[0];
-  assign o_rs2_fw_sel[1] = ((i_rs2_e == i_wb_idx_w) & i_w_en_m) & !o_rs2_fw_sel[0];
+  assign o_rs1_fw_sel[1] = ((i_rs1_e == i_wb_idx_w) & i_w_en_w) & !o_rs1_fw_sel[0];
+  assign o_rs2_fw_sel[1] = ((i_rs2_e == i_wb_idx_w) & i_w_en_w) & !o_rs2_fw_sel[0];
 
 
 endmodule

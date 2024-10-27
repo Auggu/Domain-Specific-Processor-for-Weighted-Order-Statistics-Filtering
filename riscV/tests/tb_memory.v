@@ -24,7 +24,6 @@ module tb_memory ();
 
   initial begin
     $monitor("%h", data_out);
-
     $dumpfile("out/mem.vcd");
     $dumpvars(0, tb_memory);
 

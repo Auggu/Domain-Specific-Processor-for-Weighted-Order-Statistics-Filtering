@@ -21,7 +21,7 @@ always @ (*) begin
   if(branch_op == 2'b00) do_branch = 1'b0;
   else if(branch_op == 2'b10) do_branch = 1'b1;
   else if(branch_op == 2'b01) begin
-    case ({instr30 ,func3})
+    case (func3)
       BEQ: do_branch = (r1_signed == r2_signed);
       BNE: do_branch = (r1_signed != r2_signed);
       BLT: do_branch = (r1_signed < r2_signed);

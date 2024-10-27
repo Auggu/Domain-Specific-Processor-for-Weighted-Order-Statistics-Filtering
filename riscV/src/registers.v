@@ -16,9 +16,9 @@ module registers (
   assign reg1 = rd_idx1 != 5'b0 ? regs[rd_idx1] : 32'b0;
   assign reg2 = rd_idx2 != 5'b0 ? regs[rd_idx2] : 32'b0;
 
+  integer i;
   always @(negedge clk or negedge rst) begin
     if (!rst) begin
-      integer i;
       for (i = 0; i < 32; i = i + 1) begin
         regs[i] <= 0;
       end

@@ -1,0 +1,15 @@
+src/alu.v
+src/branch.v
+src/decode.v
+src/execute.v
+src/fetch.v
+src/forwarding_unit.v
+src/hazard_detection.v
+src/imm_gen.v
+src/instr_rom.v
+src/mem_stage.v
+src/mux3.v
+src/registers.v
+src/top_riscv.v
+src/writeback.v
+

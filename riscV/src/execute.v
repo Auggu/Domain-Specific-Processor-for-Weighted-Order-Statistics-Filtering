@@ -72,6 +72,7 @@ module execute (
       .op2(op2),
       .func3(i_func3),
       .instr30(i_instr30),
+      .op2_sel(i_r2_sel),
       .alu_op(i_alu_op),
       .alu_out(alu_out)
   );

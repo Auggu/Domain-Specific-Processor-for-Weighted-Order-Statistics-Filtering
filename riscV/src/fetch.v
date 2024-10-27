@@ -16,8 +16,7 @@ module fetch #(
   wire [31:0] pc4 = pc + 4;
 
   reg [31:0] rom[0:ROM_SIZE-1];
-  wire [31:0] rom_out;
-  assign rom_out = rom[pc[31:2]];
+  wire [31:0] rom_out = rom[pc[31:2]];
 
   always @(posedge clk or negedge rst) begin
     if (!rst) pc <= 0;
