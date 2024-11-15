@@ -1,14 +1,21 @@
-module top_riscv (
+module top_riscv #(
+    parameter MAX_N   = 5,
+    parameter ROMSIZE = 512,
+    parameter MEMSIZE = 1024
+) (
     input clk,
     input rst,
     input start_btn,
-    output [55:0] seven_segs,
+    output [31:0] parameters,
+    output [31:0] reg_a0,
     output led0
 );
 
-  parameter ROMSIZE = 512;
-  parameter MEMSIZE = 1024;
-  debounce db (.clk(clk), .btn_in(~start_btn), .btn_out(start_btn_db));
+  debounce db (
+      .clk(clk),
+      .btn_in(~start_btn),
+      .btn_out(start_btn_db)
+  );
 
   run_module rm (
       .clk(clk),
@@ -41,8 +48,8 @@ module top_riscv (
       .o_pc4(pc4_f)
   );
 
-  wire [31:0] pc_d, pc4_d, reg1_d, reg2_d, imm_d, reg_a0;
-  wire reg1_sel_d, reg2_sel_d, instr30_d, mem_w_en_d, wb_en_d;
+  wire [31:0] pc_d, pc4_d, reg1_d, reg2_d, imm_d;
+  wire reg1_sel_d, reg2_sel_d, instr30_d, mem_w_en_d, wb_en_d, run_filter_d;
   wire [2:0] func3_d;
   wire [1:0] alu_op_d, branch_op_d, wb_sel_d;
   wire [4:0] w_idx_d;
@@ -86,7 +93,8 @@ module top_riscv (
       .o_wire_rs1(rs1_wire_d),
       .o_wire_rs2(rs2_wire_d),
       .o_reg_a0(reg_a0),
-      .o_ebreak(ebreak_d)
+      .o_ebreak(ebreak_d),
+      .o_run_filter(run_filter_d)
   );
 
   wire [31:0] alu_out_e, rs2_e, pc4_e;
@@ -159,9 +167,14 @@ module top_riscv (
   wire [31:0] alu_res_m;
   wire [4:0] w_idx_m;
   wire [1:0] wb_sel_m;
+  wire [MAX_N*MAX_N-1:0] mask;
   wire wb_en_m;
 
-  mem_stage #(MEMSIZE) memory_stage (
+
+  mem_stage #(
+      .MEM_SIZE(MEMSIZE),
+      .MAX_N(MAX_N)
+  ) memory_stage (
       .clk(clk_rv),
       .rst(rst),
       .i_alu_res(alu_out_e),
@@ -178,7 +191,9 @@ module top_riscv (
       .o_wb_sel(wb_sel_m),
       .o_wb_en(wb_en_m),
       .o_pc4(pc4_m),
-      .o_mem_fw_data(fw_data_m)
+      .o_mem_fw_data(fw_data_m),
+      .o_parameters(parameters),
+      .o_mask(mask)
   );
 
   wire [31:0] wb_data_wb;
@@ -197,14 +212,40 @@ module top_riscv (
       .o_wb_en  (wb_en_wb)
   );
 
-  genvar i;
-  generate
-    for (i = 0; i < 8; i = i + 1) begin : gen_seven_seg
-      seven_seg ss (
-          .in (reg_a0[i*4+:4]),
-          .out(seven_segs[i*7+:7])
-      );
-    end
-  endgenerate
+
+  wire new_line;
+  wire kernel_clk;
+  wire kernel_rst;
+  wire [7:0] kernel_out;
+
+  address_handler #(
+      .WORD (8),
+      .MAX_N(MAX_N)
+  ) ah (
+      .clk(clk_rv),
+      .rst(rst),
+      .h(parameters[7:0]),
+      .w(parameters[15:8]),
+      .n(parameters[23:16]),
+      .run(run_filter_d),
+
+      .r_addr(),
+      .w_addr(),
+      .w_en(),
+      .r_en(),
+      .kernel_newline(new_line)
+  );
+
+  masked_rank_order #(
+    .N(MAX_N*MAX_N),
+    .DATA_BITS(8),
+  ) kernel (
+    .clk(kernel_clk),
+    .rst(kernel_rst),
+    .i_new(kernel_in),
+    .mask(mask),
+    .rank_sel(parameters[31:24]),
+    .out(kernel_out)
+  );
 
 endmodule

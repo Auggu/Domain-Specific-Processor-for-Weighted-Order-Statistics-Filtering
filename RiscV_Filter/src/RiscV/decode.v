@@ -25,6 +25,7 @@ module decode (
     output reg o_instr30,
     output reg [1:0] o_alu_op,
     output reg [1:0] o_branch_op,
+    output reg o_run_filter,
 
     //MEM
     output reg o_mem_w_en,
@@ -44,6 +45,7 @@ module decode (
 
     //IO
     output [31:0] o_reg_a0
+
 );
 
   wire [6:0] opcode = i_instr[6:0];
@@ -79,7 +81,7 @@ module decode (
   wire [1:0] alu_op;
   wire [1:0] branch_op;
   wire [1:0] wb_sel;
-  wire r1_sel, r2_sel, mem_wr_en, wb_en;
+  wire r1_sel, r2_sel, mem_wr_en, wb_en, run_filter;
   control control_unit (
     .opcode(opcode),
     .r1_sel(r1_sel),
@@ -89,7 +91,8 @@ module decode (
     .mem_wr_en(mem_wr_en),
     .wb_sel(wb_sel),
     .wb_en(wb_en),
-    .ebreak(ebreak)
+    .ebreak(ebreak),
+    .run_filter(run_filter)
   );
 
   assign o_wire_rs1 = rs1;
@@ -115,6 +118,7 @@ module decode (
       o_rs1 <= 0;
       o_rs2 <= 0;
       o_ebreak <= 0;
+      o_run_filter <= 0;
     end else if (!stall) begin
       if (flush) begin
         o_pc <= 0;
@@ -135,6 +139,7 @@ module decode (
         o_rs1 <= 0;
         o_rs2 <= 0;
         o_ebreak <= 0;
+        o_run_filter <= 0;
       end else begin
         o_pc <= i_pc;
         o_pc4 <= i_pc4;
@@ -154,6 +159,7 @@ module decode (
         o_rs1 <= rs1;
         o_rs2 <= rs2;
         o_ebreak <= ebreak;
+        o_run_filter <= run_filter;
       end
     end
   end
@@ -170,7 +176,8 @@ module control (
     output reg mem_wr_en,
     output reg [1:0] wb_sel,
     output reg wb_en,
-    output reg ebreak
+    output reg ebreak,
+    output reg run_filter
 );
 
   parameter [6:0] ARTIH     = 7'b0110011;
@@ -183,9 +190,11 @@ module control (
   parameter [6:0] LUI       = 7'b0110111;
   parameter [6:0] AUIPC     = 7'b0010111;
   parameter [6:0] EBREAK    = 7'b1110011;
+  parameter [6:0] FILTER    = 7'b0001011;
 
   always @(*) begin
     ebreak = 1'b0;
+    run_filter = 1'b0;
     case (opcode)
       ARTIH: begin
         r1_sel = 1'b0;  //0: reg1,  1: pc
@@ -288,6 +297,17 @@ module control (
         ebreak = 1'b1;
       end
 
+      FILTER: begin
+        r1_sel = 1'b0;  //0: reg1,  1: pc
+        r2_sel = 1'b0;  //0: reg2,  1: imm
+        alu_op = 2'b00;  //00: add, 01: func3, 10: lui
+        mem_wr_en = 1'b0;
+        branch_op = 2'b00;  //00: no-branch, 01: func3, 10: jmp
+        wb_sel = 2'b00;  //00: alu, 01: memory, 10: pc4
+        wb_en = 1'b0;
+        run_filter = 1'b1;
+      end
+
       default: begin
         r1_sel = 1'b0;  //0: reg1,  1: pc
         r2_sel = 1'b0;  //0: reg2,  1: imm
@@ -303,4 +323,3 @@ module control (
   end
 
 endmodule
-

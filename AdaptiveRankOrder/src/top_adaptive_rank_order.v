@@ -11,7 +11,7 @@ module top_adaptive_rank_order(
 	output [6:0] sev_seg3
 );
 
-    parameter N = 91;
+    parameter N = 201;
     parameter data_bits = 8;
     parameter rank_bits = $clog2(N+1);
 	 parameter RANK_SEL = N/2 +1; 

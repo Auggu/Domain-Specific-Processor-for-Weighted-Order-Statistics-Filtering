@@ -12,4 +12,7 @@ src/mux3.v
 src/registers.v
 src/top_riscv.v
 src/writeback.v
+src/seven_seg.v
+src/run_module.v
+src/debounce.v
 

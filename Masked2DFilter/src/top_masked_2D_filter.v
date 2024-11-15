@@ -16,7 +16,7 @@ module top_masked_2D_filter (
   parameter SYNTHESIS = 1;
   parameter BYTE = 8;
   parameter INPUT_SIZE = 8;
-  parameter MAX_N = 5;
+  parameter MAX_N = 3;
 
 
   assign leds = state;
@@ -35,7 +35,7 @@ module top_masked_2D_filter (
   wire parameter_w_en = w_en_array[2];
 
   parameters #(
-      .INPUT_SIZE(INPUT_SIZE)
+		.INPUT_SIZE(INPUT_SIZE)
   ) parameters (
       .clk(clk),
       .sel(parameter_sel),
