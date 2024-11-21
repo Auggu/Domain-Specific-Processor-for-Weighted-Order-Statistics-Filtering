@@ -5,9 +5,9 @@ module masked_rank_order #(
     input clk,
     input rst,
     input [DATA_BITS-1 : 0] i_new,
-    input [N-1 : 0] mask,
+    input [N-1 : 0] i_mask,
     input [RANK_BITS -1 : 0] rank_sel,
-    output [DATA_BITS-1 : 0] out
+    output reg [DATA_BITS-1 : 0] out
 );
 
     parameter RANK_BITS = $clog2(N+1);
@@ -15,6 +15,9 @@ module masked_rank_order #(
     wire [DATA_BITS*N-1:0] s;
     wire [N-2 : 0] gts;
     wire [RANK_BITS*N-1:0] r;
+    wire [DATA_BITS-1:0] filter_out;
+
+    reg [N-1 : 0] mask;
 
     shift_reg #(DATA_BITS, N) data_regs(clk, rst, i_new, s);
     new_s_is_gt #(N, DATA_BITS)  get_gts(i_new, s[DATA_BITS*N-1: DATA_BITS], gts);
@@ -27,6 +30,11 @@ module masked_rank_order #(
            r);
 
     rank_selector #(N, DATA_BITS, RANK_BITS)
-        sel(s,r, rank_sel ,out);
+        sel(s,r, rank_sel ,filter_out);
+
+        always @(posedge clk) begin
+          out <= filter_out;
+          mask <= i_mask;
+        end
 
 endmodule

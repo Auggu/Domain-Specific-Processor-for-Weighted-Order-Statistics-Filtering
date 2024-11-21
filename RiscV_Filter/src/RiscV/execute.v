@@ -17,10 +17,11 @@ module execute (
 
     input [31:0] i_wb_fw_data,
     input [31:0] i_mem_fw_data,
-    input [ 1:0] i_r1_fw_sel,
-    input [ 1:0] i_r2_fw_sel,
+    input [1:0] i_r1_fw_sel,
+    input [1:0] i_r2_fw_sel,
     input i_mem_w_en,
 
+    input flush,
     //WB
     input [4:0] i_w_idx,
     input [1:0] i_wb_sel,
@@ -97,16 +98,27 @@ module execute (
       o_wb_sel <= 0;
       o_wb_en <= 0;
     end else begin
-      o_alu_res <= alu_out;
-      o_rs2 <= r2; o_mem_w_en <= i_mem_w_en;
-      o_func3 <= i_func3;
-      o_pc4 <= i_pc4;
-      o_w_idx <= i_w_idx;
-      o_wb_sel <= i_wb_sel;
-      o_wb_en <= i_wb_en;
+      if (flush) begin
+        o_alu_res <= 0;
+        o_rs2 <= 0;
+        o_mem_w_en <= 0;
+        o_func3 <= 0;
+        o_pc4 <= 0;
+        o_w_idx <= 0;
+        o_wb_sel <= 0;
+        o_wb_en <= 0;
+      end else begin
+        o_alu_res <= alu_out;
+        o_rs2 <= r2;
+        o_mem_w_en <= i_mem_w_en;
+        o_func3 <= i_func3;
+        o_pc4 <= i_pc4;
+        o_w_idx <= i_w_idx;
+        o_wb_sel <= i_wb_sel;
+        o_wb_en <= i_wb_en;
+      end
     end
   end
 
 
 endmodule
-

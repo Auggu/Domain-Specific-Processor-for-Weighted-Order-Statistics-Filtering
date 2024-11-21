@@ -32,8 +32,7 @@ module riscv_filter (
   wire [31:0] ss_in = swt_0 ? parameters : reg_a0;
 
   genvar i;
-  generate
-    for (i = 0; i < 8; i = i + 1) begin : gen_seven_seg
+  generate for (i = 0; i < 8; i = i + 1) begin : gen_seven_seg
       seven_seg ss (
           .in (ss_in[i*4+:4]),
           .out(seven_segs[i*7+:7])

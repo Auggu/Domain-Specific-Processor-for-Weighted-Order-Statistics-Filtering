@@ -41,7 +41,7 @@ module top_riscv #(
       .rst(rst),
       .pc_sel(do_branch),
       .jmp_addr(jmp_addr),
-      .stall(ld_hazard),
+      .stall(ld_hazard | kernel_running),
       .flush(do_branch),
       .o_instruction(instr_f),
       .o_pc(pc_f),
@@ -62,12 +62,11 @@ module top_riscv #(
       .clk(clk_rv),
       .rst(rst),
 
-      .stall(1'b0),
+      .stall(kernel_running),
       .flush(do_branch | ld_hazard),
 
       .i_instr(instr_f),
-      .i_pc(pc_f),
-      .i_pc4(pc4_f),
+      .i_pc(pc_f), .i_pc4(pc4_f),
 
       .i_wr_en  (wb_en_wb),
       .i_wr_idx (w_idx_wb),
@@ -192,8 +191,14 @@ module top_riscv #(
       .o_wb_en(wb_en_m),
       .o_pc4(pc4_m),
       .o_mem_fw_data(fw_data_m),
+
+      .i_kernel_address(kernel_address),
+      .i_kernel_running(kernel_running),
+      .i_kernel_w_en(kernel_w_en),
+      .i_kernel_input(kernel_out),
       .o_parameters(parameters),
-      .o_mask(mask)
+      .o_mask(mask),
+      .o_mem_to_kernel(mem_to_kernel)
   );
 
   wire [31:0] wb_data_wb;
@@ -213,37 +218,38 @@ module top_riscv #(
   );
 
 
-  wire new_line;
-  wire kernel_clk;
-  wire kernel_rst;
-  wire [7:0] kernel_out;
-
+  wire new_line, kernel_running, kernel_clk;
+  wire [31:0] kernel_address;
   address_handler #(
       .WORD (8),
       .MAX_N(MAX_N)
   ) ah (
       .clk(clk_rv),
       .rst(rst),
-      .h(parameters[7:0]),
-      .w(parameters[15:8]),
-      .n(parameters[23:16]),
+      .i_h(parameters[7:0]),
+      .i_w(parameters[15:8]),
+      .i_n(parameters[23:16]),
       .run(run_filter_d),
-
-      .r_addr(),
-      .w_addr(),
-      .w_en(),
-      .r_en(),
-      .kernel_newline(new_line)
+      .address(kernel_address),
+      .w_en(kernel_w_en),
+      .r_en(kernel_r_en),
+      .kernel_newline(newline),
+      .kernel_running(kernel_running),
+      .kernel_clk(kernel_clk)
   );
+
+  wire [7:0] kernel_out, mem_to_kernel;
+  wire kernel_rst = rst & ~newline;
+  wire [7:0] kernel_in = kernel_r_en ? mem_to_kernel : 8'd0 ;
 
   masked_rank_order #(
     .N(MAX_N*MAX_N),
-    .DATA_BITS(8),
+    .DATA_BITS(8)
   ) kernel (
     .clk(kernel_clk),
     .rst(kernel_rst),
     .i_new(kernel_in),
-    .mask(mask),
+    .i_mask(mask),
     .rank_sel(parameters[31:24]),
     .out(kernel_out)
   );

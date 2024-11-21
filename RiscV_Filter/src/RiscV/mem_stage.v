@@ -27,11 +27,23 @@ module mem_stage #(
     output [31:0] o_mem_fw_data,
 
     //ROF-Filter
+    input [31:0] i_kernel_address,
+    input i_kernel_running,
+    input i_kernel_w_en,
+    input [7:0] i_kernel_input,
     output [31:0] o_parameters,
-    output [MAX_N*MAX_N-1:0] o_mask
+    output [MAX_N*MAX_N-1:0] o_mask,
+    output [7:0] o_mem_to_kernel
 );
 
   wire [31:0] mem_out;
+  assign o_mem_to_kernel = mem_out[7:0];
+
+
+  wire [31:0] address = i_kernel_running ? i_kernel_address : i_alu_res;
+  wire w_en = i_kernel_running ? i_kernel_w_en : i_mem_w_en;
+  wire [2:0] func3  = i_kernel_running ? 3'b0 : i_func3;
+  wire [31:0] data_in = i_kernel_running ? {24'b0,i_kernel_input} : i_rs2;
 
   memory #(
       .SIZE (MEM_SIZE),
@@ -39,10 +51,10 @@ module mem_stage #(
   ) memory (
       .clk(~clk),
       .rst(rst),
-      .address(i_alu_res),
-      .data_in(i_rs2),
-      .func3(i_func3),
-      .w_en(i_mem_w_en),
+      .address(address),
+      .data_in(data_in),
+      .func3(func3),
+      .w_en(w_en),
       .data_out(mem_out),
       .parameters(o_parameters),
       .mask(o_mask)
@@ -134,7 +146,8 @@ module memory #(
       localparam ADD_MASK = MASK_EXTRA - i > 0 ? 1 : 0;
       mem_module #(
           .SIZE(SINGLE_SIZE),
-          .MASK_REGS(MASK_GAURENTEE + ADD_MASK)
+          .MASK_REGS(MASK_GAURENTEE + ADD_MASK),
+          .MEM_NUMBER("0"+i)
       ) mem (
           .clk(clk),
           .rst(rst),
@@ -156,7 +169,8 @@ endmodule
 
 module mem_module #(
     parameter SIZE = 256,
-    parameter MASK_REGS = 1
+    parameter MASK_REGS = 1,
+    parameter [7:0] MEM_NUMBER = 8'h0
 ) (
     input clk,
     input rst,
@@ -200,7 +214,7 @@ module mem_module #(
   end
 
   initial begin
-    $display("%d", MASK_REGS);
+    $readmemh({"memory_ini/mem",MEM_NUMBER,".hex"},mem);
   end
 
 endmodule

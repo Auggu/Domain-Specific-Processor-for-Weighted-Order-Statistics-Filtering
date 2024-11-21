@@ -24,3 +24,4 @@ src/RiscV/writeback.v
 src/RiscV/registers.v
 src/RiscV/execute.v
 src/address_handler.v
+src/address_handler2.v

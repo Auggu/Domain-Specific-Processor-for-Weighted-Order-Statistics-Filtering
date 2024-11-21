@@ -4,16 +4,31 @@ module address_handler #(
 ) (
     input clk,
     input rst,
-    input signed [WORD-1:0] h,
-    input signed [WORD-1:0] w,
-    input signed [WORD-1:0] n,
+    input signed [WORD-1:0] i_h,
+    input signed [WORD-1:0] i_w,
+    input signed [WORD-1:0] i_n,
     input run,
-    output reg [WORD:0] r_addr,
-    output reg [WORD:0] w_addr,
+    output [31:0] address,
     output wire w_en,
     output wire r_en,
-    output reg kernel_newline
+    output reg kernel_newline,
+    output kernel_clk,
+    output reg kernel_running
 );
+
+  reg [31:0] r_addr;
+  reg [31:0] w_addr;
+  reg signed [WORD-1:0] h;
+  reg signed [WORD-1:0] w;
+  reg signed [WORD-1:0] n;
+
+  always @(posedge run) begin
+    h <= i_h;
+    w <= i_w;
+    n <= i_n;
+  end
+
+  assign address = write_dly ? w_addr + end_address : r_addr;
 
   //states
   parameter IDLE = 3'b000;
@@ -39,10 +54,23 @@ module address_handler #(
 
   assign r_en = ~yr[7] & yr < h & xr < w;
   reg write;
-  assign w_en = write;
+  reg write_dly;
+  assign w_en = write_dly;
 
+  wire [31:0] end_address = h*w;
 
   reg [2:0] state;
+
+  assign kernel_clk = ~hold_kernel & clk & kernel_running;
+
+  reg hold_kernel;
+  always @(negedge clk) begin
+    hold_kernel <= write_dly ;
+  end
+
+  always @(posedge clk) begin
+    write_dly <= write;
+  end
 
   always @(posedge clk or negedge rst) begin
     if (!rst) state <= IDLE;
@@ -53,19 +81,17 @@ module address_handler #(
           else state <= IDLE;
         end
         RUN: begin
-          if (!run) state <= IDLE;
-          else begin
             if (yc == k-1) state <= NEWCOL;
             else if (xw == w) state <= NEWLINE;
             else state <= RUN;
-          end
         end
         NEWCOL: begin
           if (xw == w-1) state <= NEWLINE;
           else state <= RUN;
         end
         NEWLINE: begin
-          state <= RUN;
+          if (w_addr == end_address-1) state = IDLE;
+          else state <= RUN;
         end
       endcase
     end
@@ -82,18 +108,21 @@ module address_handler #(
         kernel_newline <= 1'd0;
         start_address <= 9'd0;
         write <= 1'd0;
+        kernel_running <= run ? 1'd1 :  1'd0;
+        kernel_newline <= 1'd1;
       end
       RUN: begin
-        if (r_en) r_addr <= r_addr + w;
+        if (r_en & ~write_dly) r_addr <= r_addr + w;
         else  r_addr <= r_addr;
-        if(write) w_addr <= w_addr + 1;
+        if(write_dly) w_addr <= w_addr + 1;
         else w_addr <= w_addr;
-        yc = yc + 1;
+        yc = write_dly ? yc : yc + 1;
         yw <= yw;
         xr <= xr;
         kernel_newline <= 1'd0;
         start_address <= start_address;
         write <= 1'd0;
+        kernel_running <= 1'd1;
       end
       NEWCOL: begin
         r_addr <= start_address + xr + 9'd1;
@@ -109,7 +138,7 @@ module address_handler #(
       NEWLINE: begin
         if (yr[7]) r_addr <= 0;
         else r_addr <= start_address + w;
-        w_addr <= w_addr + 1;
+        w_addr <= w_addr ;
         yc <= neg_k;
         yw <= yw+1;
         xr <= 8'd0;
@@ -120,6 +149,5 @@ module address_handler #(
       end
     endcase
   end
-
 
 endmodule
