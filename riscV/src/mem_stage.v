@@ -137,20 +137,10 @@ module mem_module #(
 );
 
   reg [7:0] mem[0:SIZE-1];
-
-  integer i = 0;
-  always @(posedge clk or negedge rst) begin
-    if (~rst) begin
-      for (i = 0; i < SIZE; i = i + 1) begin
-        mem[i] <= 8'b0;
-      end
-    end else begin
-      if (w_en) mem[address] <= data_in;
-    end
-  end
-
+  
   always @(posedge clk) begin
-    data_out <= mem[address];
+      if (w_en) mem[address] <= data_in;
+		data_out <= mem[address];
   end
 
 endmodule

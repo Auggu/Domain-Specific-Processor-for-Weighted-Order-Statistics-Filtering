@@ -120,6 +120,4 @@ module address_handler2 #(
       end
     endcase
   end
-
-
 endmodule

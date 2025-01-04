@@ -15,6 +15,10 @@ Masked2DFilterOld/
 latex/
 *.mw
 *.pdf
+*.bin
+*.out
+*.s
+c_code/
 #*
 ##!/riscV/src/*.v
 #!.gitignore

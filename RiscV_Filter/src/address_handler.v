@@ -1,5 +1,5 @@
 module address_handler #(
-    parameter WORD  = 8,
+    parameter WORD  = 16,
     parameter MAX_N = 25
 ) (
     input clk,
@@ -52,12 +52,12 @@ module address_handler #(
   wire [WORD-1:0] yr;
   assign yr   = yw + yc;
 
-  assign r_en = ~yr[7] & yr < h & xr < w;
+  assign r_en = ~yr[15] & yr < h & xr < w;
   reg write;
   reg write_dly;
   assign w_en = write_dly;
 
-  wire [31:0] end_address = h*w;
+  wire [31:0] end_address = $unsigned(h)*$unsigned(w);
 
   reg [2:0] state;
 
@@ -81,7 +81,8 @@ module address_handler #(
           else state <= IDLE;
         end
         RUN: begin
-            if (yc == k-1) state <= NEWCOL;
+            if (w_addr == end_address) state <= IDLE;
+            else if (yc == k-1) state <= NEWCOL;
             else if (xw == w) state <= NEWLINE;
             else state <= RUN;
         end
@@ -90,8 +91,9 @@ module address_handler #(
           else state <= RUN;
         end
         NEWLINE: begin
-          if (w_addr == end_address-1) state = IDLE;
-          else state <= RUN;
+          //if (w_addr == end_address-1) state = IDLE;
+          //else
+          state <= RUN;
         end
       endcase
     end
@@ -133,17 +135,17 @@ module address_handler #(
         if (xw == w-1) kernel_newline <= 1'd1;
         else kernel_newline <= 1'd0;
         start_address <= start_address;
-        write <= ~xw[7];
+        write <= ~xw[15];
       end
       NEWLINE: begin
-        if (yr[7]) r_addr <= 0;
+        if (yr[15]) r_addr <= 0;
         else r_addr <= start_address + w;
         w_addr <= w_addr ;
         yc <= neg_k;
         yw <= yw+1;
         xr <= 8'd0;
         kernel_newline <= 1'd0;
-        if (yr[7]) start_address <= 0;
+        if (yr[15]) start_address <= 0;
         else start_address <= start_address + w;
         write <= 1'd0;
       end

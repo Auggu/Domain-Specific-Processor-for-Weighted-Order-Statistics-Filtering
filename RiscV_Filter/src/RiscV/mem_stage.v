@@ -103,7 +103,8 @@ module memory #(
   parameter MASK_REGS = (MASK_BITS + 7) / 8;
 
   wire [MASK_REGS*8-1 : 0] mask_outs;
-  assign mask = mask_outs[MASK_REGS*8-1-:MASK_BITS];
+  //assign mask = mask_outs[MASK_REGS*8-1-:MASK_BITS];
+  assign mask = mask_outs[0+:MASK_BITS];
 
   wire [1:0] mem_sel = address[1:0];
   wire [29:0] addr_plus_0 = address[31:2];
@@ -214,7 +215,7 @@ module mem_module #(
   end
 
   initial begin
-    $readmemh({"memory_ini/mem",MEM_NUMBER,".hex"},mem);
+    $readmemh({"memory_ini/one_to_150/mem",MEM_NUMBER,".hex"},mem);
   end
 
 endmodule

@@ -10,7 +10,7 @@ def main():
 
     #n = 3
     #r = 3
-    
+
     mask5_3 = [[1,0,1,0,0],
                [0,1,0,0,0],
                [1,0,1,0,0],
@@ -29,26 +29,26 @@ def main():
                [1,1,1,1,1],
                [1,1,1,1,1],
                [1,1,1,1,1]]
-       
+
     mask3 = [[1,1,1],
             [1,1,1],
             [1,1,1]]
-    
-    
-     
+
+
+
     img_noisy = create_noisy_image("duckSmall.png")
     print("original")
     #print(img_noisy)
     ser = serial.Serial("/dev/ttyUSB0", 115200)
     filtered = run_filter(img_noisy, n, r, mask5_32 ,ser)
-    filtUint8 = filtered.astype(np.uint8)  
+    filtUint8 = filtered.astype(np.uint8)
     print("filterd")
-    #print(filtered) 
+    #print(filtered)
     true_filtered = sc.medfilt(img_noisy,n)
-    masked_res = maske_filter(img_noisy, n, mask5_32, r)  
+    masked_res = mask_filter(img_noisy, n, mask5_32, r)
 
     print("truenormal")
-    #print(true_filtered) 
+    #print(true_filtered)
     cv2.imshow("img_filtered", img_noisy)
     cv2.waitKey(0)
     cv2.imshow("img_filtered", filtUint8)
@@ -72,7 +72,7 @@ def run_filter(pic, n, r, mask, ser):
     send_i(pic, ser)
     ser.write(bytes(b's'))
     res = np.array(list(ser.read(pic.size)))
-    return res.reshape(shape) 
+    return res.reshape(shape)
 
 def create_noisy_image(path):
     img = cv2.imread(path)
@@ -128,7 +128,7 @@ def send_m(mask, n, serial):
 
     for _ in range(4 - len(byte_list)):
         byte_list.append(0)
-    
+
     print(byte_list)
     ba = bytearray(byte_list)
     serial.write(bytes(b'm'))
@@ -140,7 +140,7 @@ def send_n(n, serial):
     serial.write(bytes([n]))
     print('Setting n: ' + str(n))
 
-def maske_filter(image, n, mask, rank):
+def mask_filter(image, n, mask, rank):
     h = image.shape[0]
     w = image.shape[1]
     res = np.ndarray(image.shape)
@@ -153,7 +153,7 @@ def maske_filter(image, n, mask, rank):
 
             for i in range(-k,k+1):
                 for j in range(-k, k+1):
-                    mask_val = mask[i+k][j+k] 
+                    mask_val = mask[i+k][j+k]
                     r2 = r+i
                     c2 = c+j
                     in_bounce = r2 >= 0 and r2 < h and c2 >= 0 and c2 < w

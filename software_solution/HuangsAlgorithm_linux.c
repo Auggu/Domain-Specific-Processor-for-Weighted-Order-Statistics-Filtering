@@ -1,9 +1,9 @@
 #define m 15
 #define n 10
-#define r 1
-#define median 5
+#define r 2
+#define median 13
+#define th 12
 
-/*
 #include <stdio.h>
 void print_image(char image[][n]){
     for (int i=0; i<m; i++){
@@ -21,12 +21,9 @@ void print_H(char H[256]){
     }
     printf("\n");
 }
-*/
 
-asm("li sp, 0x100000"); // SP set to 1 MB
-asm("jal main");        // call main
-asm("li a7, 10");       // prepare ecall exit
-asm("ecall");
+int tmdn = 0;
+int mdn = 0;
 
 void init_image(char image[][n]) {
     int c = 0;
@@ -39,12 +36,9 @@ void init_image(char image[][n]) {
 }
 
 
-void prints(volatile int x){ // ptr is passed through register a0
-  asm("li a7, 1"); //You must decide the value of x
-  asm("ecall");
-}
-
 void init_H(char H[256], char X[][n], int line){
+    tmdn = 0;
+    mdn = 0;
     for(int i = 0; i < 256; i++){
         H[i] = 0;
     }
@@ -54,19 +48,19 @@ void init_H(char H[256], char X[][n], int line){
             else H[X[i+line][j]] ++;
         }
     }
+  }
 
-}
-
-char get_median(char H[256]){
-    char sum = 0;
-    char res = 0;
-    while(1){
-        sum += H[res];
-        if(sum >= median){
-            prints(res);
-            return res;
+void get_median(char H[256]){
+    if(tmdn > th){
+        while(tmdn > th){
+            mdn --;
+            tmdn = tmdn - H[mdn];
         }
-        res ++;
+    }else{
+        while(tmdn + H[mdn] <= th){
+            tmdn = tmdn + H[mdn];
+            mdn++;
+        }
     }
 }
 
@@ -80,14 +74,21 @@ void filter_image_linear(char X[][n], char Y[][n]){
             int r_x = j-r-1;
             int a_x = j+r;
             for (int k = -r; k <= r; k++){
+                unsigned char g1;
                 int y = i+k;
-                if (r_x < 0 || y < 0 || r_x >= n || y >= m) H[0] --;
-                else H[X[y][r_x]]--;
+                if (r_x < 0 || y < 0 || r_x >= n || y >= m) g1 = 0;
+                else g1 = X[y][r_x];
+                H[g1] --;
+                if (g1 < mdn) tmdn --;
 
-                if (a_x < 0 || y < 0 || a_x >= n || y >= m) H[0] ++;
-                else H[X[y][a_x]] ++;
+                if (a_x < 0 || y < 0 || a_x >= n || y >= m) g1 = 0;
+                else g1 = X[y][a_x];
+                H[g1] ++;
+                if(g1 < mdn) tmdn ++;
+                printf("%d\n", g1);
             }
-            Y[i][j] = get_median(H);
+            get_median(H);
+            Y[i][j] = mdn;
         }
     }
 }
@@ -96,7 +97,9 @@ int main(){
     char X[m][n];
     char Y[m][n];
     init_image(X);
+    print_image(X);
 
     filter_image_linear(X, Y);
+    print_image(Y);
     return 0;
  }

@@ -1,6 +1,7 @@
 module top_riscv #(
     parameter MAX_N   = 5,
     parameter ROMSIZE = 512,
+    //parameter MEMSIZE = 1024
     parameter MEMSIZE = 1024
 ) (
     input clk,
@@ -8,7 +9,9 @@ module top_riscv #(
     input start_btn,
     output [31:0] parameters,
     output [31:0] reg_a0,
-    output led0
+    output led0,
+    output reg [31:0] filter_clk_counter,
+    output reg [31:0] clk_counter
 );
 
   debounce db (
@@ -105,6 +108,7 @@ module top_riscv #(
   execute execute_stage (
       .clk(clk_rv),
       .rst(rst),
+      .flush(kernel_running),
       .i_pc(pc_d),
       .i_pc4(pc4_d),
       .i_r1(reg1_d),
@@ -221,7 +225,7 @@ module top_riscv #(
   wire new_line, kernel_running, kernel_clk;
   wire [31:0] kernel_address;
   address_handler #(
-      .WORD (8),
+      .WORD (16),
       .MAX_N(MAX_N)
   ) ah (
       .clk(clk_rv),
@@ -253,5 +257,15 @@ module top_riscv #(
     .rank_sel(parameters[31:24]),
     .out(kernel_out)
   );
+
+  always @(posedge clk_rv or negedge rst) begin
+    if (~rst) begin
+      clk_counter <= 0;
+      filter_clk_counter <= 0;
+    end else begin
+      if (kernel_running) filter_clk_counter <= filter_clk_counter + 1'b1;
+      clk_counter <= clk_counter + 1'b1;
+    end
+  end
 
 endmodule

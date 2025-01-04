@@ -1,0 +1,8 @@
+li t0 0x80000000
+li t1 0x0d050a0f
+sw t1 0(t0)
+li t1 0xFFFFFFFF
+sw t1 4(t0)
+Filter
+li t1 288
+lb a0 0(t1)
